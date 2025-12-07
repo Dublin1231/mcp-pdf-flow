@@ -1,6 +1,8 @@
-# Simple PDF Extractor (MCP)
+# MCP PDF Flow (Simple PDF Extractor)
 
-一个功能强大的 MCP (Model Context Protocol) 服务器，专注于 PDF 处理与格式转换。
+一个全能的 MCP (Model Context Protocol) 文档处理服务器，打通 LLM 与本地文档的交互。
+
+它不仅能**精准提取** PDF 中的文本和图片并转换为**结构化 Markdown**，还支持 Markdown、Word (.docx) 和 PDF 之间的**无缝格式转换**。
 
 ## 功能特性
 

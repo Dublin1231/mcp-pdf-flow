@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "simple-pdf-extractor"
 version = "0.1.0"
-description = "一个用于提取PDF文本和图片的轻量级MCP服务器"
+description = "全能 MCP 文档处理服务：智能 PDF 提取、结构化 Markdown 生成及 Word/PDF 格式互转"
 requires-python = ">=3.10"
 dependencies = [
     "mcp",
