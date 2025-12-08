@@ -1,10 +1,18 @@
-# MCP PDF Flow (Simple PDF Extractor)
+# MCP PDF Flow - AI-Powered PDF Extraction & Conversion for LLMs
 
 [中文](README.md) | **English**
 
-A powerful MCP (Model Context Protocol) document processing server that bridges LLMs with local documents.
+> 🚀 **The Ultimate MCP Server for RAG & LLM Document Processing** | PDF to Markdown | Format Converter | Intelligent Extraction
 
-It not only **precisely extracts** text and images from PDFs into **structured Markdown**, but also supports **seamless format conversion** between Markdown, Word (.docx), and PDF.
+**MCP PDF Flow** is a powerful **Model Context Protocol (MCP)** server designed to bridge the gap between Large Language Models (LLMs, like Claude) and your local documents.
+
+It serves as a comprehensive **ETL (Extract, Transform, Load)** tool for your personal knowledge base, optimizing PDFs into **clean, structured Markdown** perfectly suited for RAG pipelines and AI context windows.
+
+## ✨ Key Highlights
+
+*   **🤖 LLM-Ready Output**: Generates clean, structured Markdown optimized for AI reading and RAG indexing.
+*   **🔍 RAG & Search**: Built-in fuzzy search and metadata extraction to quickly locate relevant document sections.
+*   **🔄 Universal Converter**: Seamless conversion between PDF, Word (.docx), and Markdown.
 
 ## ✨ Features
 
@@ -48,6 +56,11 @@ cd mcp-pdf-flow
 ```bash
 uv sync
 ```
+
+### 3. Run the Server
+
+This is an MCP Server designed to be **automatically started** by clients like Claude Desktop.
+You **do not need** to manually run a startup command in the terminal. Please proceed to the [Claude Desktop Configuration](#-claude-desktop-configuration) section below. Once configured, Claude Desktop will automatically run this service in the background.
 
 ## 🔌 Claude Desktop Configuration
 

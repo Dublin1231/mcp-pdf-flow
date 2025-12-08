@@ -5,7 +5,21 @@ build-backend = "hatchling.build"
 [project]
 name = "simple-pdf-extractor"
 version = "0.1.0"
-description = "全能 MCP 文档处理服务：智能 PDF 提取、结构化 Markdown 生成及 Word/PDF 格式互转"
+description = "Ultimate MCP Server for PDF: AI-Ready Extraction to Markdown, RAG Support, and Format Conversion (PDF/Word)"
+keywords = [
+    "mcp",
+    "mcp-server",
+    "pdf",
+    "pdf-extraction",
+    "markdown",
+    "llm",
+    "rag",
+    "document-processing",
+    "pdf-to-markdown",
+    "converter",
+    "ai",
+    "claude"
+]
 requires-python = ">=3.10"
 dependencies = [
     "mcp",

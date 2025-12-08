@@ -1,0 +1,208 @@
+{
+  "main": {
+    "id": "5ea324e9bda084a9",
+    "type": "split",
+    "children": [
+      {
+        "id": "e6d5bcef5978192a",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "feb7e4bd8e36efc8",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "0a91005a7bcd35d7",
+    "type": "split",
+    "children": [
+      {
+        "id": "16abb66b50c87b8e",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "9e99b7326a779e9d",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "文件列表"
+            }
+          },
+          {
+            "id": "07cfad25fe1120af",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "搜索"
+            }
+          },
+          {
+            "id": "feb51ab835b8a933",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "书签"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "4e1e8c1957ad2293",
+    "type": "split",
+    "children": [
+      {
+        "id": "27d267d59259be8e",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "83aa2bb92f75bb10",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Servlet详解.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Servlet详解 的反向链接列表"
+            }
+          },
+          {
+            "id": "ef78430f8f24efb7",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Servlet详解.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Servlet详解 的出链列表"
+            }
+          },
+          {
+            "id": "463b8eba672d2833",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "标签"
+            }
+          },
+          {
+            "id": "75a8443f970573e7",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "添加笔记属性"
+            }
+          },
+          {
+            "id": "bc5459f8a203d3d5",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Servlet详解.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Servlet详解 的大纲"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:打开快速切换": false,
+      "graph:查看关系图谱": false,
+      "canvas:新建白板": false,
+      "daily-notes:打开/创建今天的日记": false,
+      "templates:插入模板": false,
+      "command-palette:打开命令面板": false,
+      "bases:创建新数据库": false
+    }
+  },
+  "active": "feb7e4bd8e36efc8",
+  "lastOpenFiles": [
+    "extracted_images/函数式编程/page_25_img_1.png",
+    "extracted_images/函数式编程/page_6_img_1.png",
+    "extracted_images/函数式编程/page_4_img_1.png",
+    "extracted_images/函数式编程/page_3_img_3.png",
+    "extracted_images/函数式编程/page_3_img_2.png",
+    "extracted_images/函数式编程/page_3_img_1.png",
+    "extracted_images/函数式编程/page_2_img_3.png",
+    "extracted_images/函数式编程/page_2_img_2.png",
+    "extracted_images/函数式编程/page_2_img_1.png",
+    "extracted_images/函数式编程/page_1_img_2.png",
+    "extracted_images/函数式编程/page_1_img_1.png",
+    "extracted_images/函数式编程",
+    "extracted_images/反射技术",
+    "extracted_images/网络编程",
+    "extracted_images/多线程和并发编程",
+    "extracted_images/IO流技术",
+    "extracted_images/容器",
+    "extracted_images/第二章节 常用类",
+    "extracted_images/第一章节 异常机制",
+    "extracted_images/第七章节 飞机大战小项目训练",
+    "extracted_images/第六章节 数组和数据存储",
+    "Servlet详解.md",
+    "Servlet详解_code_test.md"
+  ]
+}
