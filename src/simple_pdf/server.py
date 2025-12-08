@@ -154,13 +154,14 @@ async def get_pdf_metadata(file_path: str):
     except Exception as e:
         return [types.TextContent(type="text", text=f"Error processing PDF metadata: {str(e)}")]
 
-async def extract_content(file_path: str, page_range: str = "1", keyword: str = None, format: str = "text"):
+async def extract_content(file_path: str, page_range: str = "1", keyword: str = None, format: str = "text", include_text: bool = True, include_images: bool = False, use_local_images_only: bool = True):
     """
     提取PDF指定页面的文本和图片。
     :param file_path: PDF文件路径
     :param page_range: 页码范围，例如 "1-5", "1,3,5" (从1开始)，或 "all" 提取所有页面
     :param keyword: 关键词，如果提供，则仅提取包含该关键词的页面（忽略 page_range）
     :param format: 输出格式，'text' (默认) 或 'markdown'
+    :param use_local_images_only: 如果为True，图片仅保存到本地并在文本中引用路径，不返回Base64数据（避免上下文溢出）
     :return: 包含文本和图片的列表
     """
     if not os.path.exists(file_path):
@@ -213,7 +214,7 @@ async def extract_content(file_path: str, page_range: str = "1", keyword: str = 
                     # 解析失败默认提取第一页
                     pages_to_extract = [0]
 
-        summary_text = f"正在处理文件: {file_path}\n页码范围: {page_range} (共 {len(pages_to_extract)} 页)\n"
+        summary_text = f"正在处理文件: {file_path}\n页码范围: {page_range} (共 {len(pages_to_extract)} 页)\n内容类型: {'文本' if include_text else ''}{'/' if include_text and include_images else ''}{'图片' if include_images else ''}\n"
         result_content.append(types.TextContent(type="text", text=summary_text))
 
         # 准备图片输出目录
@@ -224,153 +225,136 @@ async def extract_content(file_path: str, page_range: str = "1", keyword: str = 
         
         # 如果需要提取图片，先创建目录
         has_images = False
+        if include_images:
+            os.makedirs(output_dir, exist_ok=True)
 
         for i in pages_to_extract:
             page_num = i + 1
             page = doc[i]
             
-            # 1. 提取文本 (使用 dict 模式 + 智能合并逻辑)
-            blocks = page.get_text("dict", sort=True)["blocks"]
-            
-            # 估计正文字体大小
-            body_size = estimate_body_size(blocks)
-            
-            full_page_text = ""
-            last_bbox = None
-            
-            for b in blocks:
-                if b["type"] != 0: continue # 忽略非文本块
-                
-                block_text, size = extract_block_text(b)
-                if not block_text: continue
-                
-                # 忽略页码 (简单规则：纯数字且字号偏离正文，或字号过小)
-                if block_text.isdigit() and (abs(size - body_size) > 1 or size < body_size):
-                    continue
-                
-                # 判断标题层级
-                prefix = ""
-                is_header = False
-                
-                # Markdown 格式才使用标题层级
-                if format == 'markdown':
-                    if size > body_size + 6: # H1
-                        prefix = "# "
-                        is_header = True
-                    elif size > body_size + 3: # H2
-                        prefix = "## "
-                        is_header = True
-                    elif size > body_size + 1: # Bold / H3
-                        # 对于较小的标题，或者长度过长的“标题”（可能是强调段落），降级处理
-                        if len(block_text) < 50:
-                            prefix = "### "
+            # 存储当前页的图片路径，用于插入到 Markdown
+            page_image_paths = []
+            image_content_objects = []
+
+            # 1. 先处理图片（保存并获取路径）
+            if include_images:
+                image_list = page.get_images()
+                if image_list:
+                    if not has_images:
+                        has_images = True
+                        result_content.append(types.TextContent(type="text", text=f"\n[图片保存目录: {output_dir}]\n"))
+                    
+                    for j, img in enumerate(image_list):
+                        try:
+                            xref = img[0]
+                            base_image = doc.extract_image(xref)
+                            image_bytes = base_image["image"]
+                            ext = base_image["ext"]
+                            img_filename = f"page_{page_num}_img_{j+1}.{ext}"
+                            img_path = os.path.join(output_dir, img_filename)
+                            
+                            with open(img_path, "wb") as f:
+                                f.write(image_bytes)
+                            
+                            # 记录路径
+                            page_image_paths.append(img_filename)
+                            
+                            # 如果需要返回 Base64，则创建 ImageContent 对象
+                            if not use_local_images_only:
+                                img_b64 = base64.b64encode(image_bytes).decode('utf-8')
+                                image_content_objects.append(types.ImageContent(
+                                    type="image",
+                                    data=img_b64,
+                                    mimeType=f"image/{ext}"
+                                ))
+                                result_content.append(types.TextContent(type="text", text=f"  - Saved: {img_filename}\n"))
+                        except Exception as img_err:
+                            result_content.append(types.TextContent(type="text", text=f"  Warning: Failed to extract image {j+1}: {img_err}\n"))
+
+            # 2. 提取文本
+            if include_text:
+                blocks = page.get_text("dict", sort=True)["blocks"]
+                body_size = estimate_body_size(blocks)
+                full_page_text = ""
+                last_bbox = None
+                for b in blocks:
+                    if b["type"] != 0:
+                        continue
+                    block_text, size = extract_block_text(b)
+                    if not block_text:
+                        continue
+                    if block_text.isdigit() and (abs(size - body_size) > 1 or size < body_size):
+                        continue
+                    prefix = ""
+                    is_header = False
+                    if format == 'markdown':
+                        if size > body_size + 6:
+                            prefix = "# "
                             is_header = True
-                        else:
-                            # 长度过长，可能是强调段落，加粗显示
-                            block_text = f"**{block_text}**"
-                
-                curr_bbox = b["bbox"]
-                curr_x0 = curr_bbox[0]
-                
-                if is_header:
-                    full_page_text += f"\n\n{prefix}{block_text}\n\n"
-                else:
-                    # 正文合并逻辑
-                    should_merge = False
-                    if full_page_text and not full_page_text.endswith('\n'):
-                        # 检查垂直距离
-                        if last_bbox:
-                            v_dist = curr_bbox[1] - last_bbox[3]
-                            if v_dist < 15.0:
-                                # 1. 检查前文结束符 (如果是句子结束，通常不合并，除非是列表项中间断开)
-                                if not is_sentence_end(full_page_text.strip()[-1]):
-                                    should_merge = True
-                                
-                                # 2. 检查缩进变化 (如果缩进发生显著变化，通常意味着新的段落或列表项)
-                                last_x0 = last_bbox[0]
-                                if abs(curr_x0 - last_x0) > 5.0:
-                                    should_merge = False
-                                
-                                # 3. 检查上一行是否"提前结束" (Line Width Check)
-                                # 如果上一行离右边缘还有较大距离，说明是强制换行(如列表项结束)
-                                page_width = page.rect.width
-                                last_x1 = last_bbox[2]
-                                # 假设右边距约为页宽的 10% 或至少 50pt
-                                right_margin_threshold = page_width - min(50, page_width * 0.1)
-                                
-                                if last_x1 < right_margin_threshold:
-                                    should_merge = False
-                                
-                                # 4. 显式列表项符号检测 (Explicit Symbol Detection)
-                                # 如果当前行以 •, 1. 等开头，强制不合并
-                                if is_list_item_start(block_text):
-                                    should_merge = False
-
-                    if should_merge:
-                        if is_cjk(full_page_text[-1]) and is_cjk(block_text[0]):
-                            full_page_text += block_text
-                        else:
-                            full_page_text += " " + block_text
+                        elif size > body_size + 3:
+                            prefix = "## "
+                            is_header = True
+                        elif size > body_size + 1:
+                            if len(block_text) < 50:
+                                prefix = "### "
+                                is_header = True
+                            else:
+                                block_text = f"**{block_text}**"
+                    curr_bbox = b["bbox"]
+                    curr_x0 = curr_bbox[0]
+                    if is_header:
+                        full_page_text += f"\n\n{prefix}{block_text}\n\n"
                     else:
-                        # 如果是列表项（有缩进且非标题），可以考虑添加标记
-                        # 简单判断：如果缩进比正文大，且看起来像短语
-                        is_list_item = False
-                        # 这里需要更复杂的逻辑来确定"正文缩进"，暂且略过，仅依靠换行修复
-                        
-                        full_page_text += "\n\n" + block_text
+                        should_merge = False
+                        if full_page_text and not full_page_text.endswith('\n'):
+                            if last_bbox:
+                                v_dist = curr_bbox[1] - last_bbox[3]
+                                if v_dist < 15.0:
+                                    if not is_sentence_end(full_page_text.strip()[-1]):
+                                        should_merge = True
+                                    last_x0 = last_bbox[0]
+                                    if abs(curr_x0 - last_x0) > 5.0:
+                                        should_merge = False
+                                    page_width = page.rect.width
+                                    last_x1 = last_bbox[2]
+                                    right_margin_threshold = page_width - min(50, page_width * 0.1)
+                                    if last_x1 < right_margin_threshold:
+                                        should_merge = False
+                                    if is_list_item_start(block_text):
+                                        should_merge = False
+                        if should_merge:
+                            if is_cjk(full_page_text[-1]) and is_cjk(block_text[0]):
+                                full_page_text += block_text
+                            else:
+                                full_page_text += " " + block_text
+                        else:
+                            full_page_text += "\n\n" + block_text
+                    last_bbox = curr_bbox
+                safe_text = full_page_text.encode('utf-8', errors='replace').decode('utf-8')
                 
-                last_bbox = curr_bbox
+                # 在文本末尾追加图片引用 (Markdown 模式)
+                if format == 'markdown' and page_image_paths:
+                    safe_text += "\n\n"
+                    for img_file in page_image_paths:
+                        # 使用相对路径或绝对路径，这里使用相对路径方便阅读
+                        # 注意：Obsidian 等工具可能需要特定格式，这里使用标准 Markdown 图片语法
+                        # 引用路径: extracted_images/filename/img.jpg
+                        rel_path = f"extracted_images/{pdf_name_no_ext}/{img_file}"
+                        # 转义空格
+                        rel_path = rel_path.replace(" ", "%20")
+                        safe_text += f"![Image]({rel_path})\n"
 
-            safe_text = full_page_text.encode('utf-8', errors='replace').decode('utf-8')
-            
-            if format == 'markdown':
-                page_header = f"## Page {page_num}\n\n"
-            else:
-                page_header = f"\n{'='*20} Page {page_num} {'='*20}\n"
-            
-            page_content = page_header + (safe_text if safe_text.strip() else "(No text content)") + "\n"
-            result_content.append(types.TextContent(type="text", text=page_content))
-            
-            # 2. 提取图片
-            image_list = page.get_images()
-            if image_list:
-                # 延迟创建目录，直到真正发现图片
-                if not has_images:
-                    os.makedirs(output_dir, exist_ok=True)
-                    has_images = True
-                    result_content.append(types.TextContent(type="text", text=f"\n[图片将保存至: {output_dir}]\n"))
-
-                img_info = f"\n[Page {page_num} Found {len(image_list)} images]\n"
-                result_content.append(types.TextContent(type="text", text=img_info))
+                if format == 'markdown':
+                    page_header = f"## Page {page_num}\n\n"
+                else:
+                    page_header = f"\n{'='*20} Page {page_num} {'='*20}\n"
                 
-                for j, img in enumerate(image_list):
-                    try:
-                        xref = img[0]
-                        base_image = doc.extract_image(xref)
-                        image_bytes = base_image["image"]
-                        ext = base_image["ext"]
-                        
-                        # 保存图片到本地
-                        img_filename = f"page_{page_num}_img_{j+1}.{ext}"
-                        img_path = os.path.join(output_dir, img_filename)
-                        with open(img_path, "wb") as f:
-                            f.write(image_bytes)
-                        
-                        # 转换为base64返回给MCP客户端
-                        img_b64 = base64.b64encode(image_bytes).decode('utf-8')
-                        
-                        # 添加图片内容
-                        # 注意：这里我们使用 image/png 作为通用格式，虽然实际上可能是 jpeg 等
-                        # MCP 客户端通常能处理 base64 数据
-                        result_content.append(types.ImageContent(
-                            type="image",
-                            data=img_b64,
-                            mimeType=f"image/{ext}"
-                        ))
-                        result_content.append(types.TextContent(type="text", text=f"  - Saved: {img_filename}\n"))
-
-                    except Exception as img_err:
-                        result_content.append(types.TextContent(type="text", text=f"  Warning: Failed to extract image {j+1}: {img_err}\n"))
+                page_content = page_header + (safe_text if safe_text.strip() else "(No text content)") + "\n"
+                result_content.append(types.TextContent(type="text", text=page_content))
+            
+            # 3. 添加图片对象 (如果启用 Base64 返回)
+            if not use_local_images_only and image_content_objects:
+                result_content.extend(image_content_objects)
 
         doc.close()
         
@@ -394,8 +378,8 @@ async def handle_list_tools() -> list[types.Tool]:
                     },
                     "page_range": {
                         "type": "string",
-                        "description": "页码范围，例如 '1-5', '1,3,5', 'all' (默认为 '1')",
-                        "default": "1"
+                        "description": "页码范围，例如 '1-5', '1,3,5', 'all' (默认为 'all')",
+                        "default": "all"
                     },
                     "keyword": {
                         "type": "string",
@@ -406,6 +390,21 @@ async def handle_list_tools() -> list[types.Tool]:
                         "enum": ["text", "markdown"],
                         "description": "输出格式，可选 'text' (默认) 或 'markdown'，markdown 格式更适合 LLM 阅读",
                         "default": "text"
+                    },
+                    "include_text": {
+                        "type": "boolean",
+                        "description": "是否提取文本，默认 true",
+                        "default": True
+                    },
+                    "include_images": {
+                        "type": "boolean",
+                        "description": "是否提取图片，默认 false",
+                        "default": False
+                    },
+                    "use_local_images_only": {
+                        "type": "boolean",
+                        "description": "如果为true(默认)，图片仅保存到本地并在文本中引用路径，不返回Base64数据（避免上下文溢出）；设为false则会返回图片Base64数据流",
+                        "default": True
                     }
                 },
                 "required": ["file_path"],
@@ -473,10 +472,13 @@ async def handle_call_tool(
     file_path = arguments.get("file_path")
 
     if name == "extract_pdf_content":
-        page_range = arguments.get("page_range", "1")
+        page_range = arguments.get("page_range", "all")
         keyword = arguments.get("keyword")
         format = arguments.get("format", "text")
-        return await extract_content(file_path, page_range, keyword, format)
+        include_text = arguments.get("include_text", True)
+        include_images = arguments.get("include_images", False)
+        use_local_images_only = arguments.get("use_local_images_only", True)
+        return await extract_content(file_path, page_range, keyword, format, include_text, include_images, use_local_images_only)
     
     elif name == "get_pdf_metadata":
         return await get_pdf_metadata(file_path)

@@ -13,8 +13,8 @@
     *   **智能 Markdown 识别**：自动识别标题、列表、段落结构，合并跨行文本，输出干净的 Markdown。
 *   **🖼️ 图片提取**：
     *   支持提取页面内的所有图片。
-    *   **自动保存**：提取的图片会自动保存到运行目录下的 `extracted_images/<文件名>/` 文件夹中。
-    *   **预览支持**：返回 Base64 编码，支持在 Claude 等 MCP 客户端中直接预览。
+    *   **自动保存与引用**：默认将图片保存到本地 `extracted_images/` 目录，并在 Markdown 中插入图片路径引用，避免大量 Base64 数据占用上下文。
+    *   **Base64 预览**：可选直接返回图片 Base64 编码，支持在 MCP 客户端中即时预览（适合少量小图）。
 *   **🔄 格式转换**：
     *   **Markdown 转 Word**：将生成的 Markdown 报告一键转换为格式完美的 Word (.docx) 文档。
     *   **Word 转 PDF**：支持将 Word 文档转换为 PDF 文件。
@@ -114,12 +114,17 @@ uv sync
 *   `file_path` (必填): PDF 文件的绝对路径。
     *   *Windows 示例*: `D:\Documents\paper.pdf`
     *   *macOS 示例*: `/Users/username/Documents/paper.pdf`
-*   `page_range` (可选): 页码范围，默认为 "1"。
+*   `page_range` (可选): 页码范围，默认为 "all"。
     *   示例: `"1"`, `"1-5"`, `"1,3,5"`, `"all"`。
 *   `keyword` (可选): 关键词搜索。若提供，将忽略页码范围，仅提取包含关键词的页面。
 *   `format` (可选): 输出格式。
     *   `"text"` (默认): 纯文本提取。
     *   `"markdown"`: **推荐**。智能识别标题和段落，适合 LLM 阅读。
+*   `include_text` (可选): 是否提取文本，默认为 `true`。
+*   `include_images` (可选): 是否提取图片，默认为 `false`。
+*   `use_local_images_only` (可选): 图片处理模式，默认为 `true`。
+    *   `true` (默认): 图片保存到本地 `extracted_images` 目录，Markdown 中使用路径引用。**推荐用于大文件或包含大量图片的 PDF，防止 Token 溢出**。
+    *   `false`: 返回图片的 Base64 数据流，可直接预览，但消耗大量 Token。
 
 ### 2. `get_pdf_metadata`
 快速获取 PDF 的元数据和目录结构。

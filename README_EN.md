@@ -13,8 +13,8 @@ It not only **precisely extracts** text and images from PDFs into **structured M
     *   **Smart Markdown Recognition**: Automatically identifies headers, lists, and paragraph structures, merges cross-line text, and outputs clean Markdown.
 *   **🖼️ Image Extraction**:
     *   Extracts all images within pages.
-    *   **Auto-save**: Extracted images are automatically saved to `extracted_images/<filename>/` in the running directory.
-    *   **Preview Support**: Returns Base64 encoding, supporting direct preview in MCP clients like Claude.
+    *   **Auto-save & Reference**: Defaults to saving images locally to `extracted_images/` and referencing them in Markdown paths, avoiding context overflow with large Base64 data.
+    *   **Base64 Preview**: Optionally returns Base64 encoding for direct preview in MCP clients (suitable for small images).
 *   **🔄 Format Conversion**:
     *   **Markdown to Word**: Converts generated Markdown reports into perfectly formatted Word (.docx) documents with one click.
     *   **Word to PDF**: Supports converting Word documents to PDF files.
@@ -114,12 +114,17 @@ Core tool for extracting PDF content.
 *   `file_path` (Required): Absolute path of the PDF file.
     *   *Windows Example*: `D:\Documents\paper.pdf`
     *   *macOS Example*: `/Users/username/Documents/paper.pdf`
-*   `page_range` (Optional): Page range, default is "1".
+*   `page_range` (Optional): Page range, default is "all".
     *   Examples: `"1"`, `"1-5"`, `"1,3,5"`, `"all"`.
 *   `keyword` (Optional): Keyword search. If provided, ignores page range and extracts only pages containing the keyword.
 *   `format` (Optional): Output format.
     *   `"text"` (Default): Plain text extraction.
     *   `"markdown"`: **Recommended**. Smartly identifies headers and paragraphs, suitable for LLM reading.
+*   `include_text` (Optional): Whether to extract text, default is `true`.
+*   `include_images` (Optional): Whether to extract images, default is `false`.
+*   `use_local_images_only` (Optional): Image processing mode, default is `true`.
+    *   `true` (Default): Saves images locally to `extracted_images` directory and uses path references in Markdown. **Recommended for large files or PDFs with many images to prevent token overflow**.
+    *   `false`: Returns Base64 data stream for images, allowing direct preview but consuming significant tokens.
 
 ### 2. `get_pdf_metadata`
 Quickly retrieves PDF metadata and Table of Contents (TOC).
