@@ -18,6 +18,12 @@ from collections import Counter
 # 初始化服务器
 server = Server("simple-pdf-extractor")
 
+# Windows console encoding fix
+import sys
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+
 def is_cjk(char):
     """判断字符是否为CJK字符"""
     if len(char) != 1: return False

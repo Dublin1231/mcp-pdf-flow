@@ -72,13 +72,46 @@ uv sync
 ```
 *注意：Windows 用户路径分隔符请使用 `/` 或 `\\`。*
 
-## 📖 工具列表
+## � 如何在对话中使用
+
+**你不需要手动填写 JSON 参数！** 只需要在对话中告诉 Claude 你想做什么，它会自动调用工具。
+
+### 场景示例
+
+#### 1. 读取 PDF
+*   **指定绝对路径**：
+    > **用户**: "帮我读取 `D:\Documents\report.pdf` 的第 1 到 5 页。"
+*   **读取项目目录下文件**：
+    > **用户**: "读取当前目录下的 `test.pdf`。"
+    > *(注：Claude 会自动查找运行目录下的文件)*
+
+#### 2. 转换 Markdown 为 Word
+> **用户**: "把刚刚提取的内容保存为 Word 文档，放在 `D:\Documents\output.docx`。"
+>
+> **Claude**: (自动调用 `convert_markdown_to_docx` 工具)
+
+#### 3. Word 转 PDF
+> **用户**: "把 `D:\Documents\draft.docx` 转换成 PDF。"
+>
+> **Claude**: (自动调用 `convert_docx_to_pdf` 工具)
+
+---
+
+## �� 工具列表
+
+> **💡 小贴士：如何获取“绝对路径”？**
+> *   **Windows**: 按住 `Shift` 键，右键点击文件，选择“复制文件地址 (Copy as path)”。粘贴时去掉首尾的引号。
+>     *   示例: `C:\Users\Name\Documents\report.pdf`
+> *   **macOS**: 选中文件，按下 `Option + Command + C` 复制路径。
+>     *   示例: `/Users/name/Documents/report.pdf`
 
 ### 1. `extract_pdf_content`
 提取 PDF 内容的核心工具。
 
 **参数：**
 *   `file_path` (必填): PDF 文件的绝对路径。
+    *   *Windows 示例*: `D:\Documents\paper.pdf`
+    *   *macOS 示例*: `/Users/username/Documents/paper.pdf`
 *   `page_range` (可选): 页码范围，默认为 "1"。
     *   示例: `"1"`, `"1-5"`, `"1,3,5"`, `"all"`。
 *   `keyword` (可选): 关键词搜索。若提供，将忽略页码范围，仅提取包含关键词的页面。
@@ -98,6 +131,8 @@ uv sync
 **参数：**
 *   `markdown_content` (必填): 要转换的 Markdown 文本内容。
 *   `output_path` (必填): 输出 .docx 文件的绝对路径。
+    *   *注意*: 这里需要填写**你希望保存的新文件路径**。
+    *   *示例*: `D:\Documents\report_output.docx`
 
 ### 4. `convert_docx_to_pdf`
 将 Word 文档转换为 PDF 文件。
@@ -106,6 +141,7 @@ uv sync
 *   `docx_path` (必填): 输入的 .docx 文件绝对路径。
 *   `pdf_path` (可选): 输出 .pdf 文件的绝对路径。
     *   如果不提供，将在原 docx 文件同目录下生成同名 pdf 文件。
+
 
 ## 📂 输出目录结构
 
