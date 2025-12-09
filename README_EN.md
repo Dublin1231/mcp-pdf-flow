@@ -93,7 +93,7 @@ Add the following content (Please **ensure** to change the path to your actual l
   }
 }
 ```
-*Note: Support JSONC (JSON with comments). If your editor reports an error, you can safely ignore it or use standard JSON (remove comments).*
+
 *Note:*
 *   *Windows users please use `/` or `\\` as path separators.*
 *   *`PDF_SEARCH_PATHS` is optional configuration for specifying extra PDF search paths. Separate multiple paths with `;` (Windows) or `:` (Mac/Linux).*
@@ -157,6 +157,7 @@ Add the following content (Please **ensure** to change the path to your actual l
 > *   **macOS**: Select the file, press `Option + Command + C` to copy the path.
 >     *   Example: `/Users/name/Documents/report.pdf`
 
+
 ### 1. `extract_pdf_content`
 Core tool for extracting PDF content.
 
@@ -167,9 +168,6 @@ Core tool for extracting PDF content.
 *   `page_range` (Optional): Page range, default is "all".
     *   Examples: `"1"`, `"1-5"`, `"1,3,5"`, `"all"`.
 *   `keyword` (Optional): Keyword search. If provided, ignores page range and extracts only pages containing the keyword.
-*   `skip_table_detection` (Optional): Whether to skip table detection, default is `false`.
-    *   `true`: **Fast Mode**. Extracts pure text only, skipping table detection. 5-10x faster, suitable for text-only scenarios.
-    *   `false`: **Standard Mode**. Performs high-precision table recognition and restructuring.
 *   `format` (Optional): Output format.
     *   `"text"` (Default): Plain text extraction.
     *   `"markdown"`: **Recommended**. Smartly identifies headers and paragraphs, suitable for LLM reading.

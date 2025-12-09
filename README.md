@@ -96,7 +96,7 @@ uv sync
   }
 }
 ```
-*注意：`jsonc` 格式支持注释，如果您的编辑器报错，请在复制前移除 `//` 注释行。*
+
 *注意：*
 *   *Windows 用户路径分隔符请使用 `/` 或 `\\`。*
 *   *`PDF_SEARCH_PATHS` 为可选配置，用于指定额外的 PDF 搜索路径，多个路径用 `;` (Windows) 或 `:` (Mac/Linux) 分隔。*
@@ -161,6 +161,7 @@ uv sync
 > *   **macOS**: 选中文件，按下 `Option + Command + C` 复制路径。
 >     *   示例: `/Users/name/Documents/report.pdf`
 
+
 ### 1. `extract_pdf_content`
 提取 PDF 内容的核心工具。
 
@@ -171,9 +172,6 @@ uv sync
 *   `page_range` (可选): 页码范围，默认为 "all"。
     *   示例: `"1"`, `"1-5"`, `"1,3,5"`, `"all"`。
 *   `keyword` (可选): 关键词搜索。若提供，将忽略页码范围，仅提取包含关键词的页面。
-*   `skip_table_detection` (可选): 是否跳过表格检测，默认为 `false`。
-    *   `true`: **极速模式**。仅提取纯文本，不检测表格。速度提升 5-10 倍，适合仅需文本内容的场景。
-    *   `false`: **标准模式**。执行高精度表格识别和重构。
 *   `format` (可选): 输出格式。
     *   `"text"` (默认): 纯文本提取。
     *   `"markdown"`: **推荐**。智能识别标题和段落，适合 LLM 阅读。
@@ -199,7 +197,10 @@ uv sync
 *   `include_text` (可选): 是否提取文本，默认为 `true`。
 *   `include_images` (可选): 是否提取图片，默认为 `false`。
 *   `use_local_images_only` (可选): 图片处理模式，默认为 `true`。
-*   `skip_table_detection` (可选): **极速模式**开关，默认为 `false`。设为 `true` 可大幅提升纯文本提取速度。
+*   `skip_table_detection` (可选): **极速模式**开关，默认为 `false`。
+    *   `false` (默认): 智能检测并提取表格，转换为 Markdown 表格格式。
+    *   `true`: **跳过表格检测**。适用于仅需要纯文本内容的场景，速度可提升 3-4 倍（约 400+ 页/秒）。
+
 
 ### 3. `get_pdf_metadata`
 快速获取 PDF 的元数据和目录结构。
