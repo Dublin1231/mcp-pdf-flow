@@ -1138,6 +1138,30 @@ def _process_single_pdf_tables(args):
     except Exception as e:
         return (False, os.path.basename(pdf_path), None, str(e))
 
+def get_output_paths_for_mode(root_dir, include_images, include_text, skip_table_detection):
+    """
+    根据模式计算输出目录路径
+    Returns: (mode_dir, image_output_dir)
+    """
+    base_output = os.path.join(root_dir, "output")
+    
+    if include_images and not include_text:
+        mode_dir_name = "output_only_image"
+    elif include_images:
+        if skip_table_detection:
+            mode_dir_name = "output_fast_with_image_no_table"
+        else:
+            mode_dir_name = "output_standard_with_image"
+    elif skip_table_detection:
+        mode_dir_name = "output_fast_no_image_and_table"
+    else:
+        mode_dir_name = "output_standard_no_image"
+        
+    mode_dir = os.path.join(base_output, mode_dir_name)
+    image_output_dir = os.path.join(mode_dir, "extracted_images")
+    
+    return mode_dir, image_output_dir
+
 def _process_single_pdf_worker(args):
     """
     用于批量处理的工作函数。
@@ -1261,19 +1285,7 @@ async def batch_extract_pdf_content(
     
     # 确定输出根目录和模式目录
     root_output_base = custom_output_dir if custom_output_dir else os.getcwd()
-    base_output = os.path.join(root_output_base, "output")
-
-    if include_images and not include_text:
-        target_mode_dir = os.path.join(base_output, "output_only_image")
-    elif include_images:
-        if skip_table_detection:
-            target_mode_dir = os.path.join(base_output, "output_fast_with_image_no_table")
-        else:
-            target_mode_dir = os.path.join(base_output, "output_standard_with_image")
-    elif skip_table_detection:
-        target_mode_dir = os.path.join(base_output, "output_fast_no_image_and_table")
-    else:
-        target_mode_dir = os.path.join(base_output, "output_standard_no_image")
+    target_mode_dir, _ = get_output_paths_for_mode(root_output_base, include_images, include_text, skip_table_detection)
     
     # 使用计算出的目录
     custom_output_dir = target_mode_dir
@@ -1639,6 +1651,10 @@ async def handle_list_tools() -> list[types.Tool]:
                         "description": "如果为true(默认)，图片仅保存到本地并在文本中引用路径，不返回Base64数据（避免上下文溢出）；设为false则会返回图片Base64数据流",
                         "default": True
                     },
+                    "custom_output_dir": {
+                        "type": "string",
+                        "description": "自定义输出目录（可选）"
+                    },
                     "skip_table_detection": {
                         "type": "boolean",
                         "description": "是否跳过表格检测（默认false）。设为true可大幅提升纯文本提取速度，但不会识别和格式化表格。",
@@ -1682,6 +1698,10 @@ async def handle_list_tools() -> list[types.Tool]:
                         "default": True
                     },
                     "custom_output_dir": {
+                        "type": "string",
+                        "description": "自定义输出目录（可选）"
+                    },
+                    "skip_table_detection": {
                         "type": "string",
                         "description": "自定义输出目录（可选）"
                     },
@@ -1821,7 +1841,18 @@ async def handle_call_tool(
         include_images = arguments.get("include_images", False)
         use_local_images_only = arguments.get("use_local_images_only", True)
         skip_table_detection = arguments.get("skip_table_detection", False)
-        return await extract_content(file_path, page_range, keyword, format, include_text, include_images, use_local_images_only, skip_table_detection=skip_table_detection)
+        custom_output_dir = arguments.get("custom_output_dir")
+        
+        # Calculate consistent paths
+        root_output_base = custom_output_dir if custom_output_dir else os.getcwd()
+        _, image_output_dir = get_output_paths_for_mode(root_output_base, include_images, include_text, skip_table_detection)
+        
+        return await extract_content(
+            file_path, page_range, keyword, format, include_text, include_images, 
+            use_local_images_only, 
+            image_output_dir=image_output_dir,
+            skip_table_detection=skip_table_detection
+        )
     
     elif name == "batch_extract_pdf_content":
         directory = arguments.get("directory")
